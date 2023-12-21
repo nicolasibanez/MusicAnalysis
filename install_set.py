@@ -8,7 +8,7 @@ def main():
     os.system('wget ' + path)
     # unzip the file
     # name : podcast001.tar
-    os.system('tar -xzvf podcast001.tar')
+    os.system('tar -xvf podcast001.tar')
 
 
 

@@ -5,6 +5,27 @@ import mutagen
 import os
 from tqdm import tqdm
 
+def estimate_key(chroma):
+    # Summarize the chroma features into one vector (average across time)
+    chroma_summary = np.mean(chroma, axis=1)
+
+    # Find the index of the maximum value in chroma_summary
+    tonic_index = np.argmax(chroma_summary)
+
+    # Major and minor third intervals (4 semitones and 3 semitones respectively)
+    major_third_index = (tonic_index + 4) % 12
+    minor_third_index = (tonic_index + 3) % 12
+
+    # Compare the strength of the major and minor third
+    is_major = chroma_summary[major_third_index] > chroma_summary[minor_third_index]
+
+    # Map index to key (simplified mapping, assuming C Major/A minor are index 0)
+    major_keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    minor_keys = ['Am', 'A#m', 'Bm', 'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m']
+
+    estimated_key = major_keys[tonic_index] if is_major else minor_keys[tonic_index]
+
+    return estimated_key
 
 def extract_features(file):
     y, sr = librosa.load(file, mono=True)
@@ -18,10 +39,14 @@ def extract_features(file):
     energy = np.sum(np.power(y, 2)) / len(y)
     # print(f'Energy: {energy}')
 
-    # Extract Chroma Features
-    chroma = librosa.feature.chroma_cens(y=y, sr=sr)
+    # Chroma feature extraction
+    y_harmonic, y_percussive = librosa.effects.hpss(y)
+    chroma = librosa.feature.chroma_cqt(y=y_harmonic, sr=sr)
     chroma_mean = np.mean(chroma, axis=1)
     # print(f'Chroma mean shape: {chroma_mean.shape}')
+
+    # Estimate the key
+    key = estimate_key(chroma)
 
     # MFCC
     mfcc = librosa.feature.mfcc(y=y, sr=sr)
@@ -33,7 +58,7 @@ def extract_features(file):
     spectral_centroids_mean = np.mean(spectral_centroids, axis=1)
     # print(f'Spectral Centroid mean shape: {spectral_centroids_mean.shape}')
 
-    return [bpm, energy] + list(chroma_mean) + list(mfcc_mean) + list(spectral_centroids_mean)
+    return [bpm, energy, key] + list(chroma_mean) + list(mfcc_mean) + list(spectral_centroids_mean)
 
 
 def main():
@@ -44,7 +69,7 @@ def main():
 
     print('Extracting Features...')
 
-    features_names = ['song', 'bpm', 'energy'] + ['chroma_' + str(i) for i in range(12)] + \
+    features_names = ['song', 'bpm', 'energy', 'key'] + ['chroma_' + str(i) for i in range(12)] + \
                      ['mfcc_' + str(i) for i in range(20)] + \
                      ['spectral_centroids']
     

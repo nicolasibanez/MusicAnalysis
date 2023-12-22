@@ -81,3 +81,19 @@ def create_graph(df):
                 G.add_edge(row_i['song'], row_j['song'], weight=distance)
                 
     return G
+
+def create_graph_key_constraint(df):
+    G = nx.Graph()
+    
+    # Add nodes with the BPM attribute
+    for index, row in df.iterrows():
+        G.add_node(row['song'], bpm=row['bpm'])
+    
+    # Add edges with a weight attribute if the BPM difference is within the threshold
+    for i, row_i in df.iterrows():
+        for j, row_j in df.iterrows():
+            key_d = key_distance(row_i['key'], row_j['key'])
+            if i != j and key_d <= 1:
+                distance = compute_distance(row_i, row_j)
+                G.add_edge(row_i['song'], row_j['song'], weight=distance)
+    return G

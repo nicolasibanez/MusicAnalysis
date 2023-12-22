@@ -13,8 +13,8 @@ def main():
     # List of SoundCloud URLs to download from
     urls = [
         "https://soundcloud.com/nicolas-ibanez-898141406/sets/your-2023-playback-copy",
-        "https://soundcloud.com/nicolas-ibanez-898141406/freeze-corleone-freeze-rael-techno-remix",
-        "https://soundcloud.com/nicolas-ibanez-898141406/preview-jour-de-plus-freeze-corleone"
+        # "https://soundcloud.com/nicolas-ibanez-898141406/freeze-corleone-freeze-rael-techno-remix",
+        # "https://soundcloud.com/nicolas-ibanez-898141406/preview-jour-de-plus-freeze-corleone"
     ]
 
     # Download each track/set from SoundCloud

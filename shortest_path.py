@@ -32,6 +32,7 @@ def main():
     X = df.iloc[:, 2:].values
 
     G = create_graph(df)
+    G = create_graph_key_constraint(df)
 
     best_path = None
     best_cost = float('inf')

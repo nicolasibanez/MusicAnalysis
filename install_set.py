@@ -19,7 +19,7 @@ def main():
 
     # Download each track/set from SoundCloud
     for url in urls:
-        subprocess.call(['scdl', '-l', url])
+        subprocess.call(['scdl', '-l', url, '--download-archive', 'downloaded.txt'])
 
     playlist_name = 'Your 2023 Playback (copy)'
 

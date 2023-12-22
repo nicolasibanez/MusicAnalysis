@@ -16,36 +16,43 @@ def load_process_data(path = 'features.csv'):
 
 
 def key_distance(key1, key2):
-    # Expanded circle of fifths to include relative minor keys
-    circle_of_fifths = [
-        'C', 'Am', 'G', 'Em', 'D', 'Bm', 'A', 'F#m', 
-        'E', 'C#m', 'B', 'G#m', 'F#', 'D#m', 'Db', 'Bbm', 
-        'Ab', 'Fm', 'Eb', 'Cm', 'Bb', 'Gm', 'F', 'Dm'
-    ]
+    # Major and minor keys in logical order
+    major_keys = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+    minor_keys = ['Am', 'A#m', 'Bm', 'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m']
 
     # Check if keys are the same
     if key1 == key2:
         return 0
 
-    # Check for relative or parallel keys
-    if key1 in circle_of_fifths and key2 in circle_of_fifths:
-        pos1 = circle_of_fifths.index(key1)
-        pos2 = circle_of_fifths.index(key2)
-        distance = min(abs(pos1 - pos2), 24 - abs(pos1 - pos2))  # Account for the circular nature
+    # Determine if the keys are major or minor
+    is_minor1 = 'm' in key1
+    is_minor2 = 'm' in key2
 
-        # Relative or parallel keys (e.g., C Major and A Minor or C Major and C Minor)
-        if distance == 3 or (key1[:-1] == key2[:-1] and key1[-1] != key2[-1]):
-            return 1
+    # Relative Minor/Major check
+    if is_minor1 != is_minor2:
+        minor_key = key1 if is_minor1 else key2
+        major_key = key1[:-1] if is_minor1 else key1
+        major_key_other = key2[:-1] if is_minor2 else key2
 
-        # Perfect fifth apart
-        elif distance == 7 or distance == 17:
-            return 1
-
-        # Other cases
-        else:
+        # Convert minor to its relative major and compare
+        relative_major = major_keys[(minor_keys.index(minor_key) + 3) % 12]
+        if major_key == relative_major or major_key_other == relative_major:
+            return 0.5
+        elif major_key == major_key_other: # Major to its parallel minor or vice versa
             return 3
+        else:
+            return 7
+
+    # Both keys are of the same type (either both major or both minor)
     else:
-        return 3  # Default case if key not found
+        index1 = major_keys.index(key1) if not is_minor1 else minor_keys.index(key1)
+        index2 = major_keys.index(key2) if not is_minor2 else minor_keys.index(key2)
+        diff = abs(index1 - index2)
+
+        if diff in [5, 7]:
+            return 2
+        else:
+            return 7
 
 # Distance between two rows of df :
 def compute_distance(row_i, row_j):
@@ -93,7 +100,7 @@ def create_graph_key_constraint(df):
     for i, row_i in df.iterrows():
         for j, row_j in df.iterrows():
             key_d = key_distance(row_i['key'], row_j['key'])
-            if i != j and key_d <= 1:
+            if i != j and key_d <= 2:
                 distance = compute_distance(row_i, row_j)
                 G.add_edge(row_i['song'], row_j['song'], weight=distance)
     return G
